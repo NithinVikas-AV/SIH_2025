@@ -10,9 +10,9 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 
-load_dotenv()  # Load API key from .env
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+load_dotenv()
 
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
 class MCPGeminiClient:
@@ -39,7 +39,7 @@ class MCPGeminiClient:
 
         response = await self.session.list_tools()
         tools = response.tools
-        print("\n✅ Connected to server with tools:", [tool.name for tool in tools])
+        print("\n Connected to server with tools:", [tool.name for tool in tools])
 
     async def process_query(self, query: str) -> str:
         response = await self.session.list_tools()
@@ -83,7 +83,7 @@ class MCPGeminiClient:
                 tools=available_tools,
             )
         except Exception as e:
-            return f"❌ Gemini API Error: {e}"
+            return f"Gemini API Error: {e}"
 
         final_text = []
 
@@ -104,14 +104,14 @@ class MCPGeminiClient:
                 final_text.append(f"[Tool {tool_name} returned: {result.content}]")
 
         if not final_text:
-            final_text.append("⚠️ Gemini gave no usable response.")
+            final_text.append("Gemini gave no usable response.")
 
         return "\n".join(final_text)
 
 
     async def chat_loop(self):
         """Interactive loop"""
-        print("\n🤖 MCP Gemini Client Started! Type 'quit' to exit.")
+        print("\nMCP Gemini Client Started! Type 'quit' to exit.")
         while True:
             query = input("\nQuery: ").strip()
             if query.lower() == "quit":
@@ -120,7 +120,7 @@ class MCPGeminiClient:
                 response = await self.process_query(query)
                 print("\n" + response)
             except Exception as e:
-                print(f"\n❌ Error: {e}")
+                print(f"\nError: {e}")
 
     async def cleanup(self):
         await self.exit_stack.aclose()
