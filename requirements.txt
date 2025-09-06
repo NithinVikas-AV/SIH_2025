@@ -7,4 +7,5 @@ fast-mcp
 mcp[cli]
 mcp
 fastmcp
-langchain-google-genai
+IndicTransToolkit
+sentencepiece

@@ -1,5 +1,6 @@
 import asyncio
 import sys
+import json
 from typing import Optional
 from contextlib import AsyncExitStack
 
@@ -10,16 +11,20 @@ import google.generativeai as genai
 from dotenv import load_dotenv
 import os
 
+from prompt_engineering import * 
+from privacy_gateway import *
+
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 genai.configure(api_key=GEMINI_API_KEY)
 
 class MCPGeminiClient:
+    
     def __init__(self):
         self.session: Optional[ClientSession] = None
         self.exit_stack = AsyncExitStack()
-        self.model = genai.GenerativeModel("gemini-1.5-flash")
+        self.model = genai.GenerativeModel("gemini-2.5-flash")
 
     async def connect_to_server(self, server_script_path: str):
         """Connect to an MCP server."""
@@ -39,7 +44,7 @@ class MCPGeminiClient:
 
         response = await self.session.list_tools()
         tools = response.tools
-        print("\n Connected to server with tools:", [tool.name for tool in tools])
+        print("\nConnected to server with tools:", [tool.name for tool in tools])
 
     async def process_query(self, query: str) -> str:
         response = await self.session.list_tools()
@@ -75,7 +80,7 @@ class MCPGeminiClient:
 
             available_tools.append(gemini_schema)
 
-        print("\n[DEBUG] Tools passed to Gemini:", available_tools)
+        # print("\n[DEBUG] Tools passed to Gemini:", available_tools)
 
         try:
             chat_response = self.model.generate_content(
@@ -88,7 +93,7 @@ class MCPGeminiClient:
         final_text = []
 
         candidate = chat_response.candidates[0]
-        print("\n[DEBUG] Raw Gemini response:", candidate)
+        # print("\n[DEBUG] Raw Gemini response:", candidate)
 
         for part in candidate.content.parts:
             if part.text:
@@ -97,28 +102,39 @@ class MCPGeminiClient:
             if hasattr(part, "function_call") and part.function_call:
                 tool_name = part.function_call.name
                 tool_args = part.function_call.args or {}
-                final_text.append(f"[Gemini requested tool: {tool_name} with {tool_args}]")
+                # final_text.append(f"[Gemini requested tool: {tool_name} with {tool_args}]")
 
                 # Call the tool
                 result = await self.session.call_tool(tool_name, tool_args)
-                final_text.append(f"[Tool {tool_name} returned: {result.content}]")
+                # final_text.append(f"[Tool {tool_name} returned: {result.content}]")
+                for item in result.content:
+                    if hasattr(item, "text"):
+                        final_text.append(item.text)
 
         if not final_text:
             final_text.append("Gemini gave no usable response.")
 
         return "\n".join(final_text)
 
-
     async def chat_loop(self):
         """Interactive loop"""
         print("\nMCP Gemini Client Started! Type 'quit' to exit.")
+        # messages = [
+        #     {"role": "system", "content": medical_prompt()},
+        # ]
         while True:
-            query = input("\nQuery: ").strip()
-            if query.lower() == "quit":
+            user_input = input("\nYou: ").strip()
+            if user_input.lower() == "quit":
                 break
+            new_query = pre_processing(user_input, 'hin_Deva', 'eng_Latn')
+            print(f"\n{new_query}")
+            # messages.append({"role": "user", "content": user_input})
             try:
-                response = await self.process_query(query)
-                print("\n" + response)
+                ai_response = await self.process_query(new_query)
+                new_ai_response = post_processing(ai_response, 'eng_Latn', 'hin_Deva')
+                print("\nBot: " + new_ai_response)
+                # print("\nBot :", ai_response)
+                # messages.append({"role": "assistant", "content": response})
             except Exception as e:
                 print(f"\nError: {e}")
 
@@ -126,13 +142,23 @@ class MCPGeminiClient:
         await self.exit_stack.aclose()
 
 async def main():
-    if len(sys.argv) < 2:
-        print("Usage: python gemini_client.py <path_to_server_script>")
+
+    config_path = os.getenv("CONFIG_FILE_NAME")
+    if not os.path.exists(config_path):
+        print(f"Config file not found: {config_path}")
+        sys.exit(1)
+
+    with open(config_path, "r") as f:
+        config = json.load(f)
+
+    server_script_path = config.get("server", {}).get("path")
+    if not server_script_path:
+        print("Server script path not found in config.")
         sys.exit(1)
 
     client = MCPGeminiClient()
     try:
-        await client.connect_to_server(sys.argv[1])
+        await client.connect_to_server(server_script_path)
         await client.chat_loop()
     finally:
         await client.cleanup()
