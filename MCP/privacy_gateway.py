@@ -22,21 +22,26 @@ id2label = model.config.id2label
 
 def emotion_classification(user_input: str) -> str:
 
+    threshold = float(os.getenv("THRESHOLD"))
+    temperature = float(os.getenv("TEMPERATURE"))
+
     inputs = tokenizer(user_input, return_tensors="pt", truncation=True).to(DEVICE)
 
     # Run inference
     with torch.no_grad():
         outputs = model(**inputs)
-        logits = outputs.logits
+        logits = outputs.logits/temperature
         probs = F.sigmoid(logits)[0].cpu().numpy()  # multi-label uses sigmoid
 
     # Get all emotions with probabilities
     results = {id2label[i]: float(probs[i]) for i in range(len(probs))}
 
     # Sort by probability (descending)
-    emotion_dict = dict(sorted(results.items(), key=lambda x: x[1], reverse=True))
+    sorted_results = dict(sorted(results.items(), key=lambda x: x[1], reverse=True))
+    filtered = {k: v for k, v in sorted_results.items() if v >= threshold}
+
     emotions = "Emotions:"
-    for emotion, score in list(emotion_dict.items())[:TOP_N_EMOTION]:
+    for emotion, score in list(filtered.items())[:TOP_N_EMOTION]:
         emotions += '\n  ' + emotion
 
     return emotions
@@ -155,8 +160,8 @@ def en_to_indic(user_input: str, src_lang: str, tgt_lang: str) -> str:
 # --------------- Main Functions ---------------
 def pre_processing(user_input: str, src_lang: str, tgt_lang: str) -> str:
 
-    emotions = emotion_classification(user_input)
     indic_en = indic_to_en(user_input, src_lang, tgt_lang)
+    emotions = emotion_classification(indic_en)
 
     new_query=f"""
     Query: 
