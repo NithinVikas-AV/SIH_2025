@@ -11,10 +11,11 @@ load_dotenv()
 from privacy_gateway import *
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+TEMPERATURE_FOR_GEMINI = int(os.getenv("TEMPERATURE_FOR_GEMINI"))
 
 async def main():
     
-    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=GEMINI_API_KEY, temperature=0.7)
+    llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", google_api_key=GEMINI_API_KEY, temperature=TEMPERATURE_FOR_GEMINI)
 
     # Connect to MCP server(s) - assuming your existing server setup
     client = MultiServerMCPClient({

@@ -7,7 +7,11 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
-DEVICE = "cpu" # torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
+DEVICE_FOR_EMOTION=os.getenv("DEVICE_FOR_EMOTION")
+DEVICE_FOR_INDIC_EN=os.getenv("DEVICE_FOR_INDIC_EN")
+DEVICE_FOR_EN_INDIC=os.getenv("DEVICE_FOR_EN_INDIC")
 
 # --------------- For Emotion Classification --------------- 
 TOP_N_EMOTION = int(os.getenv("TOP_N_EMOTION"))
@@ -16,21 +20,21 @@ EMOTION_MODEL = os.getenv("EMOTION_MODEL")
 tokenizer = AutoTokenizer.from_pretrained(EMOTION_MODEL)
 model = AutoModelForSequenceClassification.from_pretrained(EMOTION_MODEL)
 
-model.to(DEVICE)
+model.to(DEVICE_FOR_EMOTION)
 
 id2label = model.config.id2label
 
 def emotion_classification(user_input: str) -> str:
 
-    threshold = float(os.getenv("THRESHOLD"))
-    temperature = float(os.getenv("TEMPERATURE"))
+    THRESHOLD_FOR_EMOTION = float(os.getenv("THRESHOLD_FOR_EMOTION"))
+    TEMPERATURE_FOR_EMOTION = float(os.getenv("TEMPERATURE_FOR_EMOTION"))
 
-    inputs = tokenizer(user_input, return_tensors="pt", truncation=True).to(DEVICE)
+    inputs = tokenizer(user_input, return_tensors="pt", truncation=True).to(DEVICE_FOR_EMOTION)
 
     # Run inference
     with torch.no_grad():
         outputs = model(**inputs)
-        logits = outputs.logits/temperature
+        logits = outputs.logits/TEMPERATURE_FOR_EMOTION
         probs = F.sigmoid(logits)[0].cpu().numpy()  # multi-label uses sigmoid
 
     # Get all emotions with probabilities
@@ -38,7 +42,7 @@ def emotion_classification(user_input: str) -> str:
 
     # Sort by probability (descending)
     sorted_results = dict(sorted(results.items(), key=lambda x: x[1], reverse=True))
-    filtered = {k: v for k, v in sorted_results.items() if v >= threshold}
+    filtered = {k: v for k, v in sorted_results.items() if v >= THRESHOLD_FOR_EMOTION}
 
     emotions = "Emotions:"
     for emotion, score in list(filtered.items())[:TOP_N_EMOTION]:
@@ -55,7 +59,7 @@ indic_en_model = AutoModelForSeq2SeqLM.from_pretrained(
     trust_remote_code=True,
     dtype=torch.float16, # performance might slightly vary for bfloat16
     attn_implementation="flash_attention_2"
-).to(DEVICE)
+).to(DEVICE_FOR_INDIC_EN)
 
 indic_en_ip = IndicProcessor(inference=True)
 
@@ -74,7 +78,7 @@ def indic_to_en(user_input: str, src_lang: str, tgt_lang: str) -> str:
         padding="longest",
         return_tensors="pt",
         return_attention_mask=True,
-    ).to(DEVICE)
+    ).to(DEVICE_FOR_INDIC_EN)
 
     # Generate translations using the model
     with torch.no_grad():
@@ -110,7 +114,7 @@ def en_to_indic(user_input: str, src_lang: str, tgt_lang: str) -> str:
         trust_remote_code=True,
         dtype=torch.float16, # performance might slightly vary for bfloat16
         attn_implementation="flash_attention_2"
-    ).to("cuda")
+    ).to(DEVICE_FOR_EN_INDIC)
 
     en_indic_ip = IndicProcessor(inference=True)
 
@@ -127,7 +131,7 @@ def en_to_indic(user_input: str, src_lang: str, tgt_lang: str) -> str:
         padding="longest",
         return_tensors="pt",
         return_attention_mask=True,
-    ).to("cuda")
+    ).to(DEVICE_FOR_EN_INDIC)
 
     # Generate translations using the model
     with torch.no_grad():
