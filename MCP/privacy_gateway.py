@@ -18,11 +18,11 @@ TOP_N_EMOTION = int(os.getenv("TOP_N_EMOTION"))
 EMOTION_MODEL = os.getenv("EMOTION_MODEL")
 
 tokenizer = AutoTokenizer.from_pretrained(EMOTION_MODEL)
-model = AutoModelForSequenceClassification.from_pretrained(EMOTION_MODEL)
+emotion_model = AutoModelForSequenceClassification.from_pretrained(EMOTION_MODEL)
 
-model.to(DEVICE_FOR_EMOTION)
+emotion_model.to(DEVICE_FOR_EMOTION)
 
-id2label = model.config.id2label
+id2label = emotion_model.config.id2label
 
 def emotion_classification(user_input: str) -> str:
 
@@ -33,7 +33,7 @@ def emotion_classification(user_input: str) -> str:
 
     # Run inference
     with torch.no_grad():
-        outputs = model(**inputs)
+        outputs = emotion_model(**inputs)
         logits = outputs.logits/TEMPERATURE_FOR_EMOTION
         probs = F.sigmoid(logits)[0].cpu().numpy()  # multi-label uses sigmoid
 
