@@ -9,3 +9,6 @@ mcp
 fastmcp
 IndicTransToolkit
 sentencepiece
+langchain
+langchain-mcp-adapters
+langgraph
