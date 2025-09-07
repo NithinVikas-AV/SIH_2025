@@ -11,7 +11,7 @@ load_dotenv()
 from privacy_gateway import *
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-TEMPERATURE_FOR_GEMINI = int(os.getenv("TEMPERATURE_FOR_GEMINI"))
+TEMPERATURE_FOR_GEMINI = float(os.getenv("TEMPERATURE_FOR_GEMINI"))
 
 async def main():
     

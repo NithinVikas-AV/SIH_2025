@@ -12,3 +12,4 @@ sentencepiece
 langchain
 langchain-mcp-adapters
 langgraph
+gliner
