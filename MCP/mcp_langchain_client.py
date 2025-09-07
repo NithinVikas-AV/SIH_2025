@@ -23,14 +23,10 @@ async def main():
         }
     })
 
-    # Load tools from MCP server
     tools = await client.get_tools()
 
-    print(tools)
-
-    # Create LangChain ReAct agent
     agent = create_react_agent(
-        llm=llm, 
+        model=llm, 
         tools=tools,
     )
 

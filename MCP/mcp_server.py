@@ -6,6 +6,8 @@ import os
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
+from prompt_engineering import *
+
 load_dotenv()
 MEDICAL_BOT = os.getenv("MEDICAL_BOT")
 
@@ -29,9 +31,18 @@ async def get_medical_response(query: str) -> str:
 
     try:
         client = ollama.AsyncClient(timeout=180)
+        
+        new_query = f"""
+        Instruction before answering:
+            {medical_prompt()}
+
+        Query:
+            {query}
+        """
+
         result = await client.generate(
             model=MEDICAL_BOT,
-            prompt=query
+            prompt=new_query
         )
         stop_ollama_model(MEDICAL_BOT)
         return result.get("response", "No response from model.")
