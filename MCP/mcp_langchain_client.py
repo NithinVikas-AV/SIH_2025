@@ -40,11 +40,13 @@ async def main():
         
         new_user_input = pre_processing(user_input, 'hin_Deva', 'eng_Latn')
 
-        response = await agent.ainvoke({"messages": [{"role": "user", "content": user_input}]})
+        print(new_user_input)
 
-        new_response = post_processing(response, 'eng_Latn', 'hin_Deva')
+        response = await agent.ainvoke({"messages": [{"role": "user", "content": new_user_input}]})
+
+        new_response = post_processing(response["messages"][-1].content, 'eng_Latn', 'hin_Deva')
         
-        print("Response:", new_response["messages"][-1].content)
+        print("Response:", new_response)
 
 if __name__ == "__main__":
     asyncio.run(main())

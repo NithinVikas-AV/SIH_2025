@@ -50,6 +50,17 @@ async def get_medical_response(query: str) -> str:
     except Exception as e:
         return f"Error while generating response: {str(e)}"
 
+# def fetch_userdata_from_db(anonymous_id: str) -> dict:
+"""
+    Uses the anonymous id of the user to fetch his real data to send it to the counsellor in case of emergency.
+"""
+
+# @mcp.tool(description="Notify counsellors if the user's mental condition is severe.")
+# def notify_counsellor():
+"""
+    Tool to notify the available counsellor for emergency situation.
+"""
+
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     logging.info("Starting the MCP Excel Server")
