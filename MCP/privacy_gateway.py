@@ -1,4 +1,6 @@
 import torch
+from gliner import GLiNER
+from typing import List
 import torch.nn.functional as F
 from IndicTransToolkit.processor import IndicProcessor
 from transformers import AutoTokenizer, AutoModelForSequenceClassification, AutoModelForSeq2SeqLM
@@ -51,19 +53,19 @@ def emotion_classification(user_input: str) -> str:
     return emotions
 
 # --------------- Indic - to - Eng ---------------
-INDIC_EN = os.getenv("INDIC_EN")
-indic_en_tokenizer = AutoTokenizer.from_pretrained(INDIC_EN, trust_remote_code=True)
-
-indic_en_model = AutoModelForSeq2SeqLM.from_pretrained(
-    INDIC_EN,
-    trust_remote_code=True,
-    dtype=torch.float16, # performance might slightly vary for bfloat16
-    attn_implementation="flash_attention_2"
-).to(DEVICE_FOR_INDIC_EN)
-
-indic_en_ip = IndicProcessor(inference=True)
-
 def indic_to_en(user_input: str, src_lang: str, tgt_lang: str) -> str:
+
+    INDIC_EN = os.getenv("INDIC_EN")
+    indic_en_tokenizer = AutoTokenizer.from_pretrained(INDIC_EN, trust_remote_code=True)
+
+    indic_en_model = AutoModelForSeq2SeqLM.from_pretrained(
+        INDIC_EN,
+        trust_remote_code=True,
+        dtype=torch.float16, # performance might slightly vary for bfloat16
+        attn_implementation="flash_attention_2"
+    ).to(DEVICE_FOR_INDIC_EN)
+
+    indic_en_ip = IndicProcessor(inference=True)
 
     batch = indic_en_ip.preprocess_batch(
         [user_input],
@@ -100,6 +102,11 @@ def indic_to_en(user_input: str, src_lang: str, tgt_lang: str) -> str:
 
     # Postprocess the translations, including entity replacement
     translations = indic_en_ip.postprocess_batch(generated_tokens, lang=tgt_lang)
+
+    # Free GPU memory
+    del indic_en_model
+    del inputs
+    torch.cuda.empty_cache()
 
     return str(translations[0])
 
@@ -161,15 +168,41 @@ def en_to_indic(user_input: str, src_lang: str, tgt_lang: str) -> str:
 
     return str(translations[0])
 
+# --------------- PII Removal ---------------
+PII_REMOVAL_MODEL = os.getenv("PII_REMOVAL_MODEL")
+PII_REMOVAL_THRESHOLD = float(os.getenv("PII_REMOVAL_THRESHOLD"))
+
+entity_mapping = {
+    "Person": "<PERSON>",
+    "Organization": "<ORGANIZATION>",
+    "Location": "<LOCATION>",
+    "DateTime": "<DATE_TIME>",
+    "PhoneNumber": "<PHONE_NUMBER>",
+    "CreditCardNumber": "<CREDIT_CARD_NUMBER>"
+}
+def anonymize_text(text: str, entities: List[dict]) -> str:
+    anonymized_text = text
+    for entity in entities:
+        anonymized_text = anonymized_text.replace(entity["text"], entity_mapping.get(entity["label"], f"<{entity['label']}>"))
+    return anonymized_text
+def predict_entities_and_anonymize(text: str, labels: List[str]):
+    model = GLiNER.from_pretrained(PII_REMOVAL_MODEL)
+    entities = model.predict_entities(text, labels, threshold=PII_REMOVAL_THRESHOLD)
+    return anonymize_text(text, entities)
+
 # --------------- Main Functions ---------------
 def pre_processing(user_input: str, src_lang: str, tgt_lang: str) -> str:
 
     indic_en = indic_to_en(user_input, src_lang, tgt_lang)
+    
     emotions = emotion_classification(indic_en)
-
+    
+    labels = ["Person", "Organization", "PhoneNumber", "CreditCardNumber", "Location", "DateTime"]  # Use "Location" for City and Country combined
+    pii_removed_text = predict_entities_and_anonymize(indic_en, labels)
+    
     new_query=f"""
     Query: 
-        {indic_en}
+        {pii_removed_text}
 
     Emotions:
         {emotions}
