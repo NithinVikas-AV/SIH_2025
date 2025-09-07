@@ -8,6 +8,8 @@ from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 load_dotenv()
 
+from privacy_gateway import *
+
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 
 async def main():
@@ -31,14 +33,18 @@ async def main():
     )
 
     while True:
-        query = input("Enter your query (or 'exit' to quit): ")
+        user_input = input("Enter your query (or 'exit' to quit): ")
         
-        if query.lower() == 'exit':
+        if user_input.lower() == 'exit':
             break
         
-        response = await agent.ainvoke({"messages": [{"role": "user", "content": query}]})
+        new_user_input = pre_processing(user_input, 'hin_Deva', 'eng_Latn')
+
+        response = await agent.ainvoke({"messages": [{"role": "user", "content": user_input}]})
+
+        new_response = post_processing(response, 'eng_Latn', 'hin_Deva')
         
-        print("Response:", response["messages"][-1].content)
+        print("Response:", new_response["messages"][-1].content)
 
 if __name__ == "__main__":
     asyncio.run(main())
