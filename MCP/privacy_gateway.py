@@ -46,7 +46,7 @@ def emotion_classification(user_input: str) -> str:
     sorted_results = dict(sorted(results.items(), key=lambda x: x[1], reverse=True))
     filtered = {k: v for k, v in sorted_results.items() if v >= THRESHOLD_FOR_EMOTION}
 
-    emotions = "Emotions:"
+    emotions = ""
     for emotion, score in list(filtered.items())[:TOP_N_EMOTION]:
         emotions += '\n  ' + emotion
 
