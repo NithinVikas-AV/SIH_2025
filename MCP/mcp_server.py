@@ -26,34 +26,52 @@ def stop_ollama_model(model_name):
 
 @mcp.tool(description="Provide mental health support or guidance based on user queries.")
 async def get_medical_response(query: str) -> str:
-    return "Tool called successfully."
-    # try:
-    #     client = ollama.AsyncClient(timeout=180)
+    # return "Medical Response Called."
+    try:
+        client = ollama.AsyncClient(timeout=180)
         
-    #     result = await client.generate(
-    #         model=MEDICAL_BOT,
-    #         prompt=query
-    #     )
-    #     stop_ollama_model(MEDICAL_BOT)
-    #     return result.get("response", "No response from model.")
+        result = await client.generate(
+            model=MEDICAL_BOT,
+            prompt=query
+        )
+        stop_ollama_model(MEDICAL_BOT)
+        return result.get("response", "No response from model.")
     
-    # except Exception as e:
-    #     return f"Error while generating response: {str(e)}"
+    except Exception as e:
+        return f"Error while generating response: {str(e)}"
 
-# def fetch_userdata_from_db(anonymous_id: str) -> dict:
-"""
-    Uses the anonymous id of the user to fetch his real data to send it to the counsellor in case of emergency.
-"""
+@mcp.tool(description="Notify counsellors if the user's mental condition is moderate.")
+def notify_counsellor():
+    """
+        Tool to notify the available counsellor.
+    """
+    return "Notify counsellor called."
 
-@mcp.tool(description="Notify counsellors if the user's mental condition is severe.")
+@mcp.tool(description="Suggest resource like videos based on User's Emotions.")
+def suggest_resource(search_bar: str) -> str:
+    """
+        Tool to Suggest resource.
+    """
+    return "Suggested Resources Called."
+
+
+@mcp.tool(description="Alert available counsellors if the user's mental condition is severe.")
 def crisis_alert():
     """
-        Tool to notify the available counsellor for emergency situation.
+        Uses the anonymous id of the user to fetch his real data to send it to the counsellor in case of emergency.
+        Tool to Alert the available counsellor for emergency situation.
     """
     return "Crisis Alert called."
+
+@mcp.tool(description="Notify admin about Miuse of the application.")
+def flag_misuse_alert():
+    """
+        Tool to Notify the admin about misuse of application.
+    """
+    return "flag misuse alert called."
 
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
-    logging.info("Starting the MCP Excel Server")
+    logging.info("Starting the MCP Server")
     mcp.run(transport="stdio")
