@@ -26,19 +26,19 @@ def stop_ollama_model(model_name):
 
 @mcp.tool(description="Provide mental health support or guidance based on user queries.")
 async def get_medical_response(query: str) -> str:
-    # return "Tool called successfully."
-    try:
-        client = ollama.AsyncClient(timeout=180)
+    return "Tool called successfully."
+    # try:
+    #     client = ollama.AsyncClient(timeout=180)
         
-        result = await client.generate(
-            model=MEDICAL_BOT,
-            prompt=query
-        )
-        stop_ollama_model(MEDICAL_BOT)
-        return result.get("response", "No response from model.")
+    #     result = await client.generate(
+    #         model=MEDICAL_BOT,
+    #         prompt=query
+    #     )
+    #     stop_ollama_model(MEDICAL_BOT)
+    #     return result.get("response", "No response from model.")
     
-    except Exception as e:
-        return f"Error while generating response: {str(e)}"
+    # except Exception as e:
+    #     return f"Error while generating response: {str(e)}"
 
 # def fetch_userdata_from_db(anonymous_id: str) -> dict:
 """
