@@ -41,13 +41,28 @@ async def main():
     # Initialize the audit logger (client-side only)
     audit = AuditLogger(log_dir="logs", session_id=SESSION_ID)
 
+    system_prompt = """
+        You are a multilingual mental and medical emergency assistant. 
+        Your job is to:
+        1. Understand and respond to urgent or emotional user inputs related to mental health or medical emergencies.
+        2. If the situation requires action (like notifying a counsellor, sending an alert, or recommending resources), select and invoke the correct tool from the available options.
+        3. You have access to tools such as:
+        - get_medical_response: for generating general medical or mental health guidance.
+        - notify_counsellor: when a user's condition is moderate and needs human intervention.
+        - crisis_alert: if the user's condition is severe and requires urgent escalation.
+        - suggest_resource: to recommend educational or calming resources (e.g., videos).
+        - flag_misuse_alert: if someone is misusing the system (e.g., prank calls or abuse).
+
+        Always assess the emotional tone and urgency of the message before responding or using tools.
+    """
+
     while True:
         raw_input_text = input("Enter your query (or 'exit' to quit): ")
         if raw_input_text.lower() == 'exit':
             break
 
-        new_user_input = raw_input_text
-        # new_user_input = pre_processing(raw_input_text, 'hin_Deva', 'eng_Latn')
+        # new_user_input = raw_input_text
+        new_user_input = pre_processing(raw_input_text, 'hin_Deva', 'eng_Latn')
         print(new_user_input)
 
         # Start the audit turn
@@ -55,18 +70,20 @@ async def main():
 
         # Invoke the agent with callbacks so we get tool timing and model I/O
         response = await agent.ainvoke(
-            {"messages": [{"role": "user", "content": new_user_input}]},
+            {"messages": [
+                    {"role": "system", "content": system_prompt},
+                    {"role": "user", "content": new_user_input}
+                ]
+            },
             config={"callbacks": [audit], "configurable": {"thread_id": SESSION_ID}}
         )
 
         # Finalize & write the log for this turn
         record = audit.finalize_and_write(response)
 
-        new_response = response["messages"][-1].content
-        # new_response = post_processing(response["messages"][-1].content, 'eng_Latn', 'hin_Deva')
+        # new_response = response["messages"][-1].content
+        new_response = post_processing(response["messages"][-1].content, 'eng_Latn', 'hin_Deva')
         print("Response:", new_response)
-        # Optional: also print where it was saved
-        # print("Logged interaction:", record["interaction_id"])
         
 if __name__ == "__main__":
     asyncio.run(main())
