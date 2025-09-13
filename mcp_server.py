@@ -49,9 +49,10 @@ def counsellor_referral():
     cur = conn.cursor()
 
     query = """
-    SELECT id, name, current_availability
-    FROM counselor_profiles;
+        SELECT id, name, current_availability
+        FROM counselor_profiles;
     """
+
     cur.execute(query)
     rows = cur.fetchall()
 
@@ -74,19 +75,52 @@ def suggest_resource(search_bar: str) -> str:
     return "Suggested Resources Called."
 
 
-@mcp.tool(description="Alert available counsellors if the user's mental condition is severe.")
-def crisis_alert():
-    """
-        Uses the anonymous id of the user to fetch his real data to send it to the counsellor in case of emergency.
-        Tool to Alert the available counsellor for emergency situation.
-    """
+@mcp.tool(description="Alert all counsellors if the user's mental condition is severe.")
+def crisis_alert(reason: str) -> str:
+    try:
+        conn = psycopg2.connect(DB_URL, sslmode="require")
+        cur = conn.cursor()
+
+        query = f"""
+            INSERT INTO crisis_alerts (alert_type, severity_level, description, status, created_at)
+            VALUES ('ai_detected', 8, '{reason}', 'active', CURRENT_TIMESTAMP)
+        """
+
+        cur.execute(query)
+
+        conn.commit()
+
+        cur.close()
+        conn.close()
+        
+        return "Counsellor Alerted Successful" 
+    
+    except Exception as e:
+        print("Error:", e)
     return "Crisis Alert called."
 
 @mcp.tool(description="Notify admin about Miuse of the application.")
-def flag_misuse_alert():
-    """
-        Tool to Notify the admin about misuse of application.
-    """
+def flag_misuse_alert(reason: str) -> str:
+    try:
+        conn = psycopg2.connect(DB_URL, sslmode="require")
+        cur = conn.cursor()
+
+        query = f"""
+            INSERT INTO misuse_flag (id, user_id, report_type, report_reason) 
+            VALUES (uuid_generate_v4(), uuid_generate_v4(), 'ai_detected', '{reason}')
+        """
+
+        cur.execute(query)
+
+        conn.commit()
+
+        cur.close()
+        conn.close()
+        
+        return "Misuse Flag Update Successful" 
+    
+    except Exception as e:
+        print("Error:", e)
     return "flag misuse alert called."
 
 
