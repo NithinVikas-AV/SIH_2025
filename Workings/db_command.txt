@@ -1,0 +1,40 @@
+--------------- Insert in counselor_profiles ---------------
+  INSERT INTO counselor_profiles (
+  id,
+  user_id,
+  license_number,
+  specialization,
+  experience_years,
+  languages_spoken,
+  availability_schedule,
+  hourly_rate,
+  bio,
+  qualifications,
+  is_verified,
+  created_at,
+  updated_at
+)
+VALUES
+(
+  uuid_generate_v4(),
+  (SELECT id FROM users WHERE role = 'counselor' LIMIT 1),
+  'MH-PSY-2025-050',
+  ARRAY['Anxiety Counseling', 'Stress Management'],
+  6,
+  ARRAY['English', 'Hindi'],
+  '{
+    "monday": "09:00-12:00, 14:00-17:00",
+    "tuesday": "10:00-13:00, 15:00-18:00",
+    "wednesday": "09:00-12:00, 14:00-17:00",
+    "thursday": "10:00-13:00, 15:00-18:00",
+    "friday": "09:00-12:00, 14:00-17:00",
+    "saturday": "10:00-14:00",
+    "sunday": "Off"
+  }'::jsonb,
+  1000.00,
+  'Dr. Kavita Sharma is an experienced psychologist specializing in stress and anxiety management.',
+  ARRAY['M.A Clinical Psychology', 'Diploma in Counseling'],
+  true,
+  CURRENT_TIMESTAMP,
+  CURRENT_TIMESTAMP
+)
