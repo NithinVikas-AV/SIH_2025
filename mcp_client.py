@@ -27,7 +27,7 @@ async def main():
     client = MultiServerMCPClient({
         "Medical_Emergency": {
             "command": "python",
-            "args": ["D:\Hackathons\SIH 25\MCP\mcp_server.py"],
+            "args": ["D:\Hackathons\SIH 25\mcp_server.py"],
             "transport": "stdio"
         }
     })
@@ -51,7 +51,7 @@ async def main():
         - notify_counsellor: when a user's condition is moderate and needs human intervention.
         - crisis_alert: if the user's condition is severe and requires urgent escalation.
         - suggest_resource: to recommend educational or calming resources (e.g., videos).
-        - flag_misuse_alert: if someone is misusing the system (e.g., prank calls or abuse).
+        - flag_misuse_alert: if someone is misusing the system (e.g., prank calls or abuse or playing with simple chats).
 
         Always assess the emotional tone and urgency of the message before responding or using tools.
     """
@@ -62,7 +62,8 @@ async def main():
             break
 
         # new_user_input = raw_input_text
-        new_user_input = pre_processing(raw_input_text, 'hin_Deva', 'eng_Latn')
+        # new_user_input = pre_processing(raw_input_text, 'hin_Deva', 'eng_Latn')
+        new_user_input = raw_input_text
         print(new_user_input)
 
         # Start the audit turn
@@ -81,8 +82,8 @@ async def main():
         # Finalize & write the log for this turn
         record = audit.finalize_and_write(response)
 
-        # new_response = response["messages"][-1].content
-        new_response = post_processing(response["messages"][-1].content, 'eng_Latn', 'hin_Deva')
+        new_response = response["messages"][-1].content
+        # new_response = post_processing(response["messages"][-1].content, 'eng_Latn', 'hin_Deva')
         print("Response:", new_response)
         
 if __name__ == "__main__":
