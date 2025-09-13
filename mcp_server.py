@@ -2,14 +2,16 @@ import datetime
 import logging
 import ollama
 import subprocess
+import psycopg2
 import os
 from dotenv import load_dotenv
 from mcp.server.fastmcp import FastMCP
 
 load_dotenv()
+DB_URL = os.getenv("DB_URL")
 MEDICAL_BOT = os.getenv("MEDICAL_BOT")
 
-mcp = FastMCP("mcp_remote_server")
+mcp = FastMCP("mcp_server")
 
 def stop_ollama_model(model_name):
 
@@ -40,12 +42,29 @@ async def get_medical_response(query: str) -> str:
     except Exception as e:
         return f"Error while generating response: {str(e)}"
 
-@mcp.tool(description="Notify counsellors if the user's mental condition is moderate.")
-def notify_counsellor():
+@mcp.tool(description="Refer counsellors availablity if the user's mental condition is moderate.")
+def counsellor_referral():
+    
+    conn = psycopg2.connect(DB_URL, sslmode="require")
+    cur = conn.cursor()
+
+    query = """
+    SELECT id, name, current_availability
+    FROM counselor_profiles;
     """
-        Tool to notify the available counsellor.
-    """
-    return "Notify counsellor called."
+    cur.execute(query)
+    rows = cur.fetchall()
+
+    counsellor_details = ""
+    counsellor_details_format = "ID: {id}, Name: {name}, Availability: {availability}"
+
+    for row in rows:
+        counsellor_details += counsellor_details_format.format(id = row[0], name = row[1], availability = row[2])
+
+    cur.close()
+    conn.close()
+
+    return counsellor_details
 
 @mcp.tool(description="Suggest resource like videos based on User's Emotions.")
 def suggest_resource(search_bar: str) -> str:
