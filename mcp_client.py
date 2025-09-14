@@ -20,12 +20,6 @@ SESSION_ID = os.getenv("SESSION_ID") or str(uuid.uuid4())
 
 async def main():
 
-    llm = ChatGoogleGenerativeAI(
-        model=model_name,
-        google_api_key=GEMINI_API_KEY,
-        temperature=TEMPERATURE_FOR_GEMINI
-    )
-
     client = MultiServerMCPClient({
         "Medical_Emergency": {
             "command": "python",
@@ -33,19 +27,14 @@ async def main():
             "transport": "stdio"
         }
     })
+
     tools = await client.get_tools()
 
-    checkpointer = InMemorySaver()
-
-    agent = create_react_agent(
-        model=llm,
-        tools=tools,
-        checkpointer=checkpointer,
-        
+    llm = ChatGoogleGenerativeAI(
+        model=model_name,
+        google_api_key=GEMINI_API_KEY,
+        temperature=TEMPERATURE_FOR_GEMINI
     )
-
-    # Initialize the audit logger (client-side only)
-    audit = AuditLogger(log_dir="logs", session_id=SESSION_ID)
 
     system_prompt = """
         You are a multilingual mental and medical emergency assistant. 
@@ -62,6 +51,18 @@ async def main():
         Always assess the emotional tone and urgency of the message before responding or using tools.
     """
 
+    checkpointer = InMemorySaver()
+
+    agent = create_react_agent(
+        model=llm,
+        tools=tools,
+        checkpointer=checkpointer,
+        prompt=system_prompt
+    )
+
+    # Initialize the audit logger (client-side only)
+    audit = AuditLogger(log_dir="logs", session_id=SESSION_ID)
+
     while True:
         raw_input_text = input("Enter your query (or 'exit' to quit): ")
         if raw_input_text.lower() == 'exit':
@@ -70,7 +71,7 @@ async def main():
         # new_user_input = raw_input_text
         # new_user_input = pre_processing(raw_input_text, 'hin_Deva', 'eng_Latn')
         new_user_input = raw_input_text
-        print(new_user_input)
+        # print(new_user_input)
 
         # Start the audit turn
         audit.start_interaction(raw_input_text, new_user_input, model_name=model_name)
@@ -78,10 +79,8 @@ async def main():
         # Invoke the agent with callbacks so we get tool timing and model I/O
         response = await agent.ainvoke(
             {"messages": [
-                    {"role": "system", "content": system_prompt},
-                    {"role": "user", "content": new_user_input}
-                ]
-            },
+                {"role": "user", "content": new_user_input}
+            ]},
             config={"callbacks": [audit], "configurable": {"thread_id": SESSION_ID}}
         )
 
