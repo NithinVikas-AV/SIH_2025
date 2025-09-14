@@ -4,6 +4,7 @@ import uuid
 from langchain_mcp_adapters.client import MultiServerMCPClient
 from langchain_mcp_adapters.tools import load_mcp_tools
 from langgraph.prebuilt import create_react_agent
+from langgraph.checkpoint.memory import InMemorySaver
 from langchain_google_genai import ChatGoogleGenerativeAI
 from dotenv import load_dotenv
 
@@ -13,11 +14,12 @@ from Audit_codes import AuditLogger
 load_dotenv()
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+model_name = os.getenv("GEMINI_MODEL_NAME")
 TEMPERATURE_FOR_GEMINI = float(os.getenv("TEMPERATURE_FOR_GEMINI"))
 SESSION_ID = os.getenv("SESSION_ID") or str(uuid.uuid4())
 
 async def main():
-    model_name = "gemini-2.5-flash"
+
     llm = ChatGoogleGenerativeAI(
         model=model_name,
         google_api_key=GEMINI_API_KEY,
@@ -33,9 +35,13 @@ async def main():
     })
     tools = await client.get_tools()
 
+    checkpointer = InMemorySaver()
+
     agent = create_react_agent(
         model=llm,
         tools=tools,
+        checkpointer=checkpointer,
+        
     )
 
     # Initialize the audit logger (client-side only)
