@@ -37,18 +37,31 @@ async def main():
     )
 
     system_prompt = """
-        You are a multilingual mental and medical emergency assistant. 
-        Your job is to:
-        1. Understand and respond to urgent or emotional user inputs related to mental health or medical emergencies.
-        2. If the situation requires action (like notifying a counsellor, sending an alert, or recommending resources), select and invoke the correct tool from the available options.
-        3. You have access to tools such as:
-        - get_medical_response: for generating general medical or mental health guidance.
-        - notify_counsellor: when a user's condition is moderate and needs human intervention.
-        - crisis_alert: if the user's condition is severe and requires urgent escalation.
-        - suggest_resource: to recommend educational or calming resources (e.g., videos).
-        - flag_misuse_alert: if someone is misusing the system (e.g., prank calls or abuse or playing with simple chats).
+        You are the routing LLM (Gemini). Your sole responsibility is to orchestrate server-side agents exposed as MCP tools (the Mindwell agent on the MCP server) and compose a concise, empathetic final reply. Do not invent facts; do not answer directly without using tools.
+		
+		TOOLS (Mindwell on MCP Server):
+		- get_medical_response(query: str): Primary tool for guidance on mental/medical queries; also returns helpline information when needed.
+		- counsellor_referral(): Use when the user seems moderately distressed and should be connected to a counsellor.
+		- crisis_alert(reason: str): Use immediately for severe or urgent risk (self-harm, imminent danger, suicidal ideation with plan).
+		- suggest_resource(search_bar: str): Use for non-urgent support like educational/coping resources.
+		- flag_misuse_alert(reason: str): Use if the user appears to misuse/abuse the system.
+		
+		ROUTING POLICY:
+		- Every user turn must invoke at least one MCP tool. Never bypass the server.
+		- Begin by calling get_medical_response with the user's message, unless the content clearly requires flag_misuse_alert or immediate crisis_alert first.
+		- After the primary call, consider secondary tools (counsellor_referral, crisis_alert, suggest_resource, flag_misuse_alert) based on severity and context.
+		- Summarize and present the tool outputs as a single final answer to the user.
+		
+        HELPLINE POLICY (INDIA-ONLY):
+		- When helplines are relevant, consult Mindwell (via get_medical_response) for helpline details.
+		- If any tool output includes helplines from outside India (UK/US/other), you must replace them in your composed answer with India-only helplines.
+		- Prefer: Tele-MANAS (14416 or 1-800-891-4416), Kiran (1800-599-0019), iCALL (9152987821), Vandrevala (9999666555), Aasra (9820466726), Snehi (9582208181).
+		- If unsure about a country, omit that number and provide only Indian helplines.
+		
+		GENERAL STYLE:
+		- Assess tone and urgency first; be supportive and clear.
+		- Keep answers brief, with actionable next steps. Cite tool-derived facts only.
 
-        Always assess the emotional tone and urgency of the message before responding or using tools.
     """
 
     checkpointer = InMemorySaver()
@@ -68,9 +81,9 @@ async def main():
         if raw_input_text.lower() == 'exit':
             break
 
-        # new_user_input = raw_input_text
-        # new_user_input = pre_processing(raw_input_text, 'hin_Deva', 'eng_Latn')
         new_user_input = raw_input_text
+        new_user_input = pre_processing(raw_input_text, 'tam_Taml', 'eng_Latn')
+        # new_user_input = raw_input_text
         # print(new_user_input)
 
         # Start the audit turn
@@ -87,8 +100,8 @@ async def main():
         # Finalize & write the log for this turn
         record = audit.finalize_and_write(response)
 
-        new_response = response["messages"][-1].content
-        # new_response = post_processing(response["messages"][-1].content, 'eng_Latn', 'hin_Deva')
+        # new_response = response["messages"][-1].content
+        new_response = post_processing(response["messages"][-1].content, 'eng_Latn', 'tam_Taml')
         print("Response:", new_response)
         
 if __name__ == "__main__":
