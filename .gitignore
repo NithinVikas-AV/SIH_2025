@@ -1,2 +1,2 @@
-sih_env
-.env
+frontend/node_modules/
+server/node_modules/
