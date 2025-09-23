@@ -1,6 +1,8 @@
 import React from 'react';
 import styled from 'styled-components';
+import { Routes, Route, Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
+import CounselorAppointmentsPage from '../pages/counselor/AppointmentsPage';
 
 const DashboardContainer = styled.div`
   display: grid;

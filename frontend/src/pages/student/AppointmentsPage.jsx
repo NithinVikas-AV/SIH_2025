@@ -113,7 +113,7 @@ function AppointmentsPage() {
   const [slots, setSlots] = useState([]);
   const [error, setError] = useState('');
 
-  const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const API_URL = (import.meta.env.VITE_API_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:3001');
   const token = typeof window !== 'undefined' ? localStorage.getItem('authToken') : null;
 
   useEffect(() => {

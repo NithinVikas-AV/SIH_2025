@@ -14,6 +14,7 @@ import AdminDashboard from './dashboards/AdminDashboard';
 import StudentDashboard from './dashboards/StudentDashboard';
 import CounselorDashboard from './dashboards/CounselorDashboard';
 import VolunteerDashboard from './dashboards/VolunteerDashboard';
+import CounselorAppointmentsPage from './pages/counselor/AppointmentsPage';
 // Import other dashboards...
 
 function App() {
@@ -46,10 +47,19 @@ function App() {
           />
 
           <Route
-            path="/counselor-dashboard"
+            path="/counselor-dashboard/*"
             element={
               <ProtectedRoute requiredRole="counselor">
                 <CounselorDashboard />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/counselor-appointments"
+            element={
+              <ProtectedRoute requiredRole="counselor">
+                <CounselorAppointmentsPage />
               </ProtectedRoute>
             }
           />

@@ -87,7 +87,7 @@ const navigationItems = {
   counselor: [
     { id: 'dashboard', label: 'Dashboard', icon: '📊', path: '/counselor-dashboard' },
     { id: 'students', label: 'My Students', icon: '👨‍🎓', path: '/counselor-dashboard/students' },
-    { id: 'appointments', label: 'Appointments', icon: '📅', path: '/counselor-dashboard/appointments' },
+    { id: 'appointments', label: 'Appointments', icon: '📅', path: '/counselor-appointments' },
     { id: 'resources', label: 'Resources', icon: '📚', path: '/counselor-dashboard/resources' },
     { id: 'reports', label: 'Reports', icon: '📈', path: '/counselor-dashboard/reports' },
   ],

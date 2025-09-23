@@ -23,7 +23,7 @@ const authenticateToken = (req, res, next) => {
 };
 
 // GET /api/counselors
-// Fetch all active counselors with profile snippets when current_availability is true
+// Fetch all counselors with profile snippets from counselor_profiles
 router.get('/', authenticateToken, async (req, res) => {
   try {
     const query = `
@@ -37,7 +37,7 @@ router.get('/', authenticateToken, async (req, res) => {
         cp.current_availability
       FROM users u
       JOIN counselor_profiles cp ON cp.user_id = u.id
-      WHERE LOWER(u.role) = 'counselor' AND COALESCE(cp.current_availability, false) = true
+      WHERE LOWER(u.role) = 'counselor'
       ORDER BY u.first_name ASC, u.last_name ASC
     `;
 
@@ -46,9 +46,13 @@ router.get('/', authenticateToken, async (req, res) => {
     const counselors = rows.map(r => ({
       user_id: r.user_id,
       name: `${r.first_name || ''} ${r.last_name || ''}`.trim(),
-      specialization: r.specialization || [],
+      specialization: Array.isArray(r.specialization)
+        ? r.specialization
+        : (r.specialization ? [r.specialization] : []),
       experience_years: r.experience_years || 0,
-      languages_spoken: r.languages_spoken || [],
+      languages_spoken: Array.isArray(r.languages_spoken)
+        ? r.languages_spoken
+        : (r.languages_spoken ? [r.languages_spoken] : []),
       current_availability: !!r.current_availability,
     }));
 
