@@ -247,8 +247,8 @@ if (process.env.NODE_ENV !== 'production') {
       const hashed = await bcrypt.hash(plainPassword, 10);
 
       await db.query(
-        'INSERT INTO users (email, password_hash, first_name, role) VALUES ($1, $2, $3, $4)',
-        [testEmail, hashed, 'Dev', role]
+        'INSERT INTO users (email, password_hash, first_name, last_name, role) VALUES ($1, $2, $3, $4, $5)',
+        [testEmail, hashed, 'Dev', 'User', role]
       );
 
       res.json({ message: 'Test user created', user: { email: testEmail, role }, password: plainPassword });

@@ -217,6 +217,9 @@ function LoginPage() {
   localStorage.setItem('authToken', token);
   localStorage.setItem('userRole', (user.role || '').toLowerCase());
   localStorage.setItem('userName', user.firstName || 'User');
+  if (user.id) {
+    localStorage.setItem('userId', String(user.id));
+  }
 
       // Map backend role names to client routes (handle variants like 'college_admin')
       const role = (user.role || '').toLowerCase();

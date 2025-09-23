@@ -1,6 +1,13 @@
 import React from 'react';
 import styled from 'styled-components';
+import { Routes, Route, Link } from 'react-router-dom';
 import DashboardLayout from '../components/DashboardLayout';
+import StudentDashboardHome from '../pages/student/StudentDashboardHome';
+import AIChatPage from '../pages/student/ai/AIChatPage';
+import PeerChatListPage from '../pages/student/peer/PeerChatListPage';
+import PeerChatRoomPage from '../pages/student/peer/PeerChatRoomPage';
+import AppointmentsPage from '../pages/student/AppointmentsPage';
+import SurveyPage from '../pages/student/SurveyPage';
 
 const DashboardContainer = styled.div`
   display: grid;
@@ -49,47 +56,16 @@ const Progress = styled.div`
 const StudentDashboard = () => {
   return (
     <DashboardLayout role="student">
-      <h1>Student Dashboard</h1>
-      <p>Welcome to your student dashboard. Track your applications and connect with counselors.</p>
-      
-      <DashboardContainer>
-        <Card>
-          <CardTitle>My Applications</CardTitle>
-          <CardContent>
-            <p>You have 3 applications in progress.</p>
-            <ProgressBar>
-              <Progress percent={60} />
-            </ProgressBar>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardTitle>Upcoming Appointments</CardTitle>
-          <CardContent>
-            <p>Next counseling session: Tomorrow, 3:00 PM</p>
-            <p>Topic: College Selection Strategy</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardTitle>Recommended Colleges</CardTitle>
-          <CardContent>
-            <p>Based on your profile, we've found 5 colleges that match your interests.</p>
-            <p>Click to explore your matches.</p>
-          </CardContent>
-        </Card>
-        
-        <Card>
-          <CardTitle>Tasks</CardTitle>
-          <CardContent>
-            <p>You have 2 pending tasks to complete.</p>
-            <ul>
-              <li>Upload transcript</li>
-              <li>Complete personal statement</li>
-            </ul>
-          </CardContent>
-        </Card>
-      </DashboardContainer>
+      <Routes>
+        <Route path="/" element={<StudentDashboardHome />} />
+        <Route path="ai-chat" element={<AIChatPage />} />
+        <Route path="peer-chat" element={<PeerChatListPage />} />
+        <Route path="peer-chat/:volunteerId" element={<PeerChatRoomPage />} />
+        <Route path="appointments" element={<AppointmentsPage />} />
+        <Route path="survey" element={<SurveyPage />} />
+        {/* Fallback to home */}
+        <Route path="*" element={<StudentDashboardHome />} />
+      </Routes>
     </DashboardLayout>
   );
 };

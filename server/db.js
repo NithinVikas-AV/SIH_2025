@@ -4,9 +4,7 @@ require('dotenv').config();
 
 const pool = new Pool({
   connectionString: process.env.DATABASE_URL,
-  ssl: {
-    rejectUnauthorized: false
-  }
+  ssl: true
 });
 
 // Try to verify the database connection immediately and log the result.

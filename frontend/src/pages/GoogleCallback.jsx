@@ -82,6 +82,9 @@ function GoogleCallback() {
   localStorage.setItem('authToken', token);
   localStorage.setItem('userRole', (user.role || '').toLowerCase());
   localStorage.setItem('userName', user.firstName || 'User');
+  if (user.id) {
+    localStorage.setItem('userId', String(user.id));
+  }
 
         // Redirect based on user role
         setStatus('Login successful! Redirecting...');
