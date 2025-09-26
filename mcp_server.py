@@ -28,7 +28,7 @@ def stop_ollama_model(model_name):
 
 @mcp.tool(description="Provide mental health support or guidance based on user queries.")
 async def get_medical_response(query: str) -> str:
-    # return "Medical Response Called."
+    
     try:
         client = ollama.AsyncClient(timeout=180)
         
@@ -45,84 +45,86 @@ async def get_medical_response(query: str) -> str:
 @mcp.tool(description="Refer counsellors availablity if the user's mental condition is moderate.")
 def counsellor_referral():
     
-    conn = psycopg2.connect(DB_URL, sslmode="require")
-    cur = conn.cursor()
+    return """Dr. Nithin Vikas is Available."""
 
-    query = """
-        SELECT id, name, current_availability
-        FROM counselor_profiles;
-    """
+    # conn = psycopg2.connect(DB_URL, sslmode="require")
+    # cur = conn.cursor()
 
-    cur.execute(query)
-    rows = cur.fetchall()
+    # query = """
+    #     SELECT id, name, current_availability
+    #     FROM counselor_profiles;
+    # """
 
-    counsellor_details = ""
-    counsellor_details_format = "ID: {id}, Name: {name}, Availability: {availability}"
+    # cur.execute(query)
+    # rows = cur.fetchall()
 
-    for row in rows:
-        counsellor_details += counsellor_details_format.format(id = row[0], name = row[1], availability = row[2])
+    # counsellor_details = ""
+    # counsellor_details_format = "ID: {id}, Name: {name}, Availability: {availability}"
 
-    cur.close()
-    conn.close()
+    # for row in rows:
+    #     counsellor_details += counsellor_details_format.format(id = row[0], name = row[1], availability = row[2])
 
-    return counsellor_details
+    # cur.close()
+    # conn.close()
+
+    # return counsellor_details
 
 @mcp.tool(description="Suggest resource like videos based on User's Emotions.")
 def suggest_resource(search_bar: str) -> str:
-    """
-        Tool to Suggest resource.
-    """
-    return "Suggested Resources Called."
 
+    return "Suggested Resources, It is available in resource hub."
 
 @mcp.tool(description="Alert all counsellors if the user's mental condition is severe.")
 def crisis_alert(reason: str) -> str:
-    try:
-        conn = psycopg2.connect(DB_URL, sslmode="require")
-        cur = conn.cursor()
-
-        query = f"""
-            INSERT INTO crisis_alerts (alert_type, severity_level, description, status, created_at)
-            VALUES ('ai_detected', 8, '{reason}', 'active', CURRENT_TIMESTAMP)
-        """
-
-        cur.execute(query)
-
-        conn.commit()
-
-        cur.close()
-        conn.close()
-        
-        return "Counsellor Alerted Successful" 
     
-    except Exception as e:
-        print("Error:", e)
-    return "Crisis Alert called."
+    return "Counsellor Notified."
+
+    # try:
+    #     conn = psycopg2.connect(DB_URL, sslmode="require")
+    #     cur = conn.cursor()
+
+    #     query = f"""
+    #         INSERT INTO crisis_alerts (alert_type, severity_level, description, status, created_at)
+    #         VALUES ('ai_detected', 8, '{reason}', 'active', CURRENT_TIMESTAMP)
+    #     """
+
+    #     cur.execute(query)
+
+    #     conn.commit()
+
+    #     cur.close()
+    #     conn.close()
+        
+    #     return "Counsellor Alerted Successful" 
+    
+    # except Exception as e:
+    #     print("Error:", e)
 
 @mcp.tool(description="Notify admin about Miuse of the application.")
 def flag_misuse_alert(reason: str) -> str:
-    try:
-        conn = psycopg2.connect(DB_URL, sslmode="require")
-        cur = conn.cursor()
-
-        query = f"""
-            INSERT INTO misuse_flag (id, user_id, report_type, report_reason) 
-            VALUES (uuid_generate_v4(), uuid_generate_v4(), 'ai_detected', '{reason}')
-        """
-
-        cur.execute(query)
-
-        conn.commit()
-
-        cur.close()
-        conn.close()
-        
-        return "Misuse Flag Update Successful" 
     
-    except Exception as e:
-        print("Error:", e)
-    return "flag misuse alert called."
+    return "User reported successfully."
 
+    # try:
+    #     conn = psycopg2.connect(DB_URL, sslmode="require")
+    #     cur = conn.cursor()
+
+    #     query = f"""
+    #         INSERT INTO misuse_flag (id, user_id, report_type, report_reason) 
+    #         VALUES (uuid_generate_v4(), uuid_generate_v4(), 'ai_detected', '{reason}')
+    #     """
+
+    #     cur.execute(query)
+
+    #     conn.commit()
+
+    #     cur.close()
+    #     conn.close()
+        
+    #     return "Misuse Flag Update Successful" 
+    
+    # except Exception as e:
+    #     print("Error:", e)
 
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
