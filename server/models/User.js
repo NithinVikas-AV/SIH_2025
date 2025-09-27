@@ -27,6 +27,45 @@ class User {
     }
   }
 
+  static async updateUser(id, updateData) {
+    try {
+      const fields = [];
+      const values = [];
+      let paramCount = 1;
+
+      // Build dynamic query based on provided fields
+      Object.keys(updateData).forEach(key => {
+        if (updateData[key] !== undefined) {
+          fields.push(`${key} = $${paramCount}`);
+          values.push(updateData[key]);
+          paramCount++;
+        }
+      });
+
+      if (fields.length === 0) {
+        throw new Error('No fields to update');
+      }
+
+      values.push(id);
+      const query = `UPDATE users SET ${fields.join(', ')}, updated_at = NOW() WHERE id = $${paramCount} RETURNING *`;
+      
+      const { rows } = await db.query(query, values);
+      return rows[0];
+    } catch (error) {
+      throw new Error('Failed to update user: ' + error.message);
+    }
+  }
+
+  static async findByEmail(email) {
+    try {
+      const query = 'SELECT * FROM users WHERE email = $1';
+      const { rows } = await db.query(query, [email]);
+      return rows[0];
+    } catch (error) {
+      throw new Error('Failed to find user by email: ' + error.message);
+    }
+  }
+
   // Add more methods as needed
 }
 

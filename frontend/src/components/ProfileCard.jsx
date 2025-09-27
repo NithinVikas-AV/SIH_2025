@@ -7,7 +7,8 @@ const Card = styled.div`
   margin: 0 auto;
   background: rgba(253, 250, 247, 0.85);
   border-radius: 16px;
-  padding: 24px;
+  padding: 24px;  position: relative;
+
   box-shadow: 0 8px 40px rgba(0,0,0,0.06);
   display: flex;
   gap: 24px;
@@ -78,11 +79,43 @@ const ProfileCard = ({
   firstName = '',
   lastName = '',
   email = '',
-  preferredLang = 'en',
+  preferredLang = 'eng_Latn',
   college = '',
   avatarUrl = ''
 }) => {
   const fullName = `${firstName || ''} ${lastName || ''}`.trim();
+
+  // Language mapping to display names
+  const languages = {
+    "asm_Beng": "Assamese",
+    "kas_Arab": "Kashmiri (Arabic)",
+    "pan_Guru": "Punjabi",
+    "ben_Beng": "Bengali",
+    "kas_Deva": "Kashmiri (Devanagari)",
+    "san_Deva": "Sanskrit",
+    "brx_Deva": "Bodo",
+    "mai_Deva": "Maithili",
+    "sat_Olck": "Santali",
+    "doi_Deva": "Dogri",
+    "mal_Mlym": "Malayalam",
+    "snd_Arab": "Sindhi (Arabic)",
+    "eng_Latn": "English",
+    "mar_Deva": "Marathi",
+    "snd_Deva": "Sindhi (Devanagari)",
+    "gom_Deva": "Konkani",
+    "mni_Beng": "Manipuri (Bengali)",
+    "tam_Taml": "Tamil",
+    "guj_Gujr": "Gujarati",
+    "mni_Mtei": "Manipuri (Meitei)",
+    "tel_Telu": "Telugu",
+    "hin_Deva": "Hindi",
+    "npi_Deva": "Nepali",
+    "urd_Arab": "Urdu",
+    "kan_Knda": "Kannada",
+    "ory_Orya": "Odia"
+  };
+
+  const languageName = languages[preferredLang] || 'English';
 
   return (
     <Card>
@@ -95,7 +128,7 @@ const ProfileCard = ({
         <Sub>{email}</Sub>
 
         <Row>
-          <Badge>Lang: {preferredLang || 'en'}</Badge>
+          <Badge>Lang: {languageName}</Badge>
           {college && <Badge>{college}</Badge>}
         </Row>
       </Info>

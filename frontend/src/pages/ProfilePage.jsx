@@ -197,11 +197,41 @@ function ProfilePage(){
     email: '',
     phone: '',
     college: '',
-    preferredLang: 'en',
+    preferredLang: 'eng_Latn',
     avatarUrl: ''
   });
 
   const fileRef = useRef(null);
+
+  // Language options with their codes
+  const languages = {
+    "Assamese": "asm_Beng",
+    "Kashmiri (Arabic)": "kas_Arab",
+    "Punjabi": "pan_Guru",
+    "Bengali": "ben_Beng",
+    "Kashmiri (Devanagari)": "kas_Deva",
+    "Sanskrit": "san_Deva",
+    "Bodo": "brx_Deva",
+    "Maithili": "mai_Deva",
+    "Santali": "sat_Olck",
+    "Dogri": "doi_Deva",
+    "Malayalam": "mal_Mlym",
+    "Sindhi (Arabic)": "snd_Arab",
+    "English": "eng_Latn",
+    "Marathi": "mar_Deva",
+    "Sindhi (Devanagari)": "snd_Deva",
+    "Konkani": "gom_Deva",
+    "Manipuri (Bengali)": "mni_Beng",
+    "Tamil": "tam_Taml",
+    "Gujarati": "guj_Gujr",
+    "Manipuri (Meitei)": "mni_Mtei",
+    "Telugu": "tel_Telu",
+    "Hindi": "hin_Deva",
+    "Nepali": "npi_Deva",
+    "Urdu": "urd_Arab",
+    "Kannada": "kan_Knda",
+    "Odia": "ory_Orya"
+  };
 
   useEffect(()=>{
     // Load user from localStorage (fallback)
@@ -218,7 +248,7 @@ function ProfilePage(){
       lastName: lastName || '',
       email: email || '',
       college: college || '',
-      preferredLang: localStorage.getItem('preferredLang') || 'en',
+      preferredLang: localStorage.getItem('preferredLang') || 'eng_Latn',
       avatarUrl: localStorage.getItem('userAvatar') || ''
     }));
   },[]);
@@ -248,11 +278,36 @@ function ProfilePage(){
     if (!validate()) return;
     setLoading(true);
     try{
-      // Optionally: send to backend
-      // const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
-      // await axios.post(`${API_URL}/api/user/update`, form, { headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` } });
+      // Try to save to backend first
+      const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+      const userEmail = localStorage.getItem('userEmail') || localStorage.getItem('userEmailAddress');
+      
+      if (userEmail) {
+        try {
+          // Get user by email first to get the user ID
+          const userResponse = await axios.get(`${API_URL}/api/users/email/${encodeURIComponent(userEmail)}`);
+          const userId = userResponse.data.user.id;
+          
+          // Update user profile in database
+          const updateData = {
+            first_name: form.firstName,
+            last_name: form.lastName,
+            college: form.college,
+            phone: form.phone,
+            preferred_language: form.preferredLang
+          };
+          
+          await axios.put(`${API_URL}/api/users/${userId}`, updateData, { 
+            headers: { Authorization: `Bearer ${localStorage.getItem('authToken')}` } 
+          });
+        } catch (backendError) {
+          console.warn('Backend save failed, falling back to localStorage:', backendError);
+        }
+      } else {
+        console.warn('No user email found in localStorage');
+      }
 
-      // Persist locally for now
+      // Persist locally as fallback/backup
       localStorage.setItem('userName', `${form.firstName} ${form.lastName}`);
       localStorage.setItem('userEmail', form.email);
       localStorage.setItem('userCollege', form.college);
@@ -282,7 +337,7 @@ function ProfilePage(){
       lastName: lastName || '',
       email: email || '',
       college: college || '',
-      preferredLang: localStorage.getItem('preferredLang') || 'en',
+      preferredLang: localStorage.getItem('preferredLang') || 'eng_Latn',
       avatarUrl: localStorage.getItem('userAvatar') || ''
     }));
 
@@ -363,12 +418,15 @@ function ProfilePage(){
                 <Row>
                   <Field>
                     <Label>Preferred Language</Label>
-                    {mode === 'view' ? <div>{form.preferredLang === 'en' ? 'English' : form.preferredLang}</div> : (
+                    {mode === 'view' ? (
+                      <div>{Object.keys(languages).find(key => languages[key] === form.preferredLang) || 'English'}</div>
+                    ) : (
                       <Select name="preferredLang" value={form.preferredLang} onChange={handleChange}>
-                        <option value="en">English</option>
-                        <option value="es">Spanish</option>
-                        <option value="fr">French</option>
-                        <option value="ta">Tamil</option>
+                        {Object.entries(languages).map(([languageName, languageCode]) => (
+                          <option key={languageCode} value={languageCode}>
+                            {languageName}
+                          </option>
+                        ))}
                       </Select>
                     )}
                   </Field>

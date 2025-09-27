@@ -11,6 +11,8 @@ const surveyRoutes = require('./routes/surveys');
 const counselorsRoutes = require('./routes/counselors');
 const appointmentsRoutes = require('./routes/appointments');
 const db = require('./db');
+const { spawn } = require('child_process');
+const path = require('path');
 
 const app = express();
 const httpServer = createServer(app);
@@ -70,6 +72,58 @@ app.use('/api/users', usersRoutes);
 app.use('/api/surveys', surveyRoutes);
 app.use('/api/counselors', counselorsRoutes);
 app.use('/api/appointments', appointmentsRoutes);
+
+// AI Chat endpoint
+app.post('/chat', async (req, res) => {
+  try {
+    const { message, language = 'tam_Taml' } = req.body;
+    
+    if (!message) {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+
+    // Path to the MCP client script
+    const mcpClientPath = path.join(__dirname, '..', 'SIH_2025', 'mcp_client_remote.py');
+    
+    // Spawn Python process to run MCP client
+    const pythonProcess = spawn('python', [mcpClientPath, message, language], {
+      cwd: path.join(__dirname, '..', 'SIH_2025')
+    });
+
+    let responseData = '';
+    let errorData = '';
+
+    pythonProcess.stdout.on('data', (data) => {
+      responseData += data.toString();
+    });
+
+    pythonProcess.stderr.on('data', (data) => {
+      errorData += data.toString();
+    });
+
+    pythonProcess.on('close', (code) => {
+      if (code === 0) {
+        // Extract the response from the output
+        const responseMatch = responseData.match(/Response:(.*?)(?:\n\n\n|$)/s);
+        const response = responseMatch ? responseMatch[1].trim() : responseData.trim();
+        
+        res.json({ response });
+      } else {
+        console.error('Python process error:', errorData);
+        res.status(500).json({ error: 'Failed to get AI response' });
+      }
+    });
+
+    pythonProcess.on('error', (error) => {
+      console.error('Failed to start Python process:', error);
+      res.status(500).json({ error: 'Failed to start AI service' });
+    });
+
+  } catch (error) {
+    console.error('Chat endpoint error:', error);
+    res.status(500).json({ error: 'Internal server error' });
+  }
+});
 
 httpServer.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);

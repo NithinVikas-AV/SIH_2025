@@ -82,6 +82,7 @@ function GoogleCallback() {
   localStorage.setItem('authToken', token);
   localStorage.setItem('userRole', (user.role || '').toLowerCase());
   localStorage.setItem('userName', user.firstName || 'User');
+  localStorage.setItem('userEmail', user.email || ''); // Store email for profile updates
   if (user.id) {
     localStorage.setItem('userId', String(user.id));
   }
